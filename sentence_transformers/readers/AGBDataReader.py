@@ -1,7 +1,10 @@
 from . import InputExample
 import csv
+import sys
 import gzip
 import os
+
+csv.field_size_limit(sys.maxsize)
 
 
 class AGBDataReader(object):
