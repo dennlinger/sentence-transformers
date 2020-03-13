@@ -25,12 +25,13 @@ class SentencesDataset(Dataset):
         Create a new SentencesDataset with the tokenized texts and the labels as Tensor
         """
         if show_progress_bar is None:
-            show_progress_bar = (logging.getLogger().getEffectiveLevel() == logging.INFO or logging.getLogger().getEffectiveLevel() == logging.DEBUG)
+            show_progress_bar = (logging.getLogger().getEffectiveLevel() == logging.INFO or
+                                 logging.getLogger().getEffectiveLevel() == logging.DEBUG)
         self.show_progress_bar = show_progress_bar
 
         self.convert_input_examples(examples, model)
 
-    def convert_input_examples(self, examples: List[InputExample], model: SentenceTransformer):
+    def convert_input_examples(self, examples: List[InputExample], model: SentenceTransformer, shorten: bool = False):
         """
         Converts input examples to a SmartBatchingDataset usable to train the model with
         SentenceTransformer.smart_batching_collate as the collate_fn for the DataLoader
@@ -41,6 +42,8 @@ class SentencesDataset(Dataset):
             the input examples for the training
         :param model
             the Sentence BERT model for the conversion
+        :param shorten
+            when enabled will cut sentences that exceed maximum sequence length to what is possible
         :return:
             a SmartBatchingDataset usable to train the model with SentenceTransformer.smart_batching_collate
             as the collate_fn for the DataLoader
@@ -68,7 +71,9 @@ class SentencesDataset(Dataset):
                 if max_seq_length and len(token) >= max_seq_length > 0:
                     too_long[i] += 1
                     # Instead, shorten to correct length, and append EOS token.
-                    tokenized_texts[i] = token[:max_seq_length-1] + token[-1]
+                    # Still count too_long for analysis purposes though.
+                    if shorten:
+                        tokenized_texts[i] = token[:max_seq_length-1] + token[-1]
 
             labels.append(example.label)
             for i in range(num_texts):
@@ -161,7 +166,8 @@ class SentenceLabelDataset(Dataset):
                     label_type = torch.float
             tokenized_text = model.tokenize(example.texts[0])
 
-            if hasattr(model, 'max_seq_length') and model.max_seq_length is not None and model.max_seq_length > 0 and len(tokenized_text) >= model.max_seq_length:
+            if hasattr(model, 'max_seq_length') and model.max_seq_length is not None and model.max_seq_length > 0 and \
+                    len(tokenized_text) >= model.max_seq_length:
                 too_long += 1
             if example.label in label_sent_mapping:
                 label_sent_mapping[example.label].append(ex_index)
