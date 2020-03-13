@@ -4,7 +4,7 @@ import gzip
 import os
 
 
-class NLIDataReader(object):
+class AGBDataReader(object):
     """
     Reads in the Heidelberg AGB dataset
     """
