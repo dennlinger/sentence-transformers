@@ -20,18 +20,27 @@ class SentencesDataset(Dataset):
     The SentenceBertEncoder.smart_batching_collate is required for this to work.
     SmartBatchingDataset does *not* work without it.
     """
-    def __init__(self, examples: List[InputExample], model: SentenceTransformer, show_progress_bar: bool = None):
+    def __init__(self, examples: List[InputExample], model: SentenceTransformer, show_progress_bar: bool = None,
+                 shorten: bool = False):
         """
         Create a new SentencesDataset with the tokenized texts and the labels as Tensor
+        :param examples:
+            list of the examples
+        :param model:
+            model that will be applied
+        :param show_progress_bar:
+            whether or not to show a progress bar
+        :param shorten:
+            when enabled will cut sentences that exceed maximum sequence length to what is possible
         """
         if show_progress_bar is None:
             show_progress_bar = (logging.getLogger().getEffectiveLevel() == logging.INFO or
                                  logging.getLogger().getEffectiveLevel() == logging.DEBUG)
         self.show_progress_bar = show_progress_bar
-
+        self.shorten = shorten
         self.convert_input_examples(examples, model)
 
-    def convert_input_examples(self, examples: List[InputExample], model: SentenceTransformer, shorten: bool = False):
+    def convert_input_examples(self, examples: List[InputExample], model: SentenceTransformer):
         """
         Converts input examples to a SmartBatchingDataset usable to train the model with
         SentenceTransformer.smart_batching_collate as the collate_fn for the DataLoader
@@ -42,8 +51,6 @@ class SentencesDataset(Dataset):
             the input examples for the training
         :param model
             the Sentence BERT model for the conversion
-        :param shorten
-            when enabled will cut sentences that exceed maximum sequence length to what is possible
         :return:
             a SmartBatchingDataset usable to train the model with SentenceTransformer.smart_batching_collate
             as the collate_fn for the DataLoader
@@ -72,7 +79,7 @@ class SentencesDataset(Dataset):
                     too_long[i] += 1
                     # Instead, shorten to correct length, and append EOS token.
                     # Still count too_long for analysis purposes though.
-                    if shorten:
+                    if self.shorten:
                         tokenized_texts[i] = token[:max_seq_length-1] + token[-1]
 
             labels.append(example.label)
