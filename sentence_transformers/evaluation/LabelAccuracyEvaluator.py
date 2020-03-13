@@ -7,6 +7,7 @@ from ..util import batch_to_device
 import os
 import csv
 
+
 class LabelAccuracyEvaluator(SentenceEvaluator):
     """
     Evaluate a model based on its accuracy on a labeled dataset
@@ -16,7 +17,7 @@ class LabelAccuracyEvaluator(SentenceEvaluator):
     The results are written in a CSV. If a CSV already exists, then values are appended.
     """
 
-    def __init__(self, dataloader: DataLoader, name: str = "", softmax_model = None):
+    def __init__(self, dataloader: DataLoader, name: str = "", softmax_model=None):
         """
         Constructs an evaluator for the given dataset
 
