@@ -21,7 +21,7 @@ logging.basicConfig(format='%(asctime)s - %(message)s',
 # Read the dataset
 model_name = 'roberta-base'
 batch_size = 16
-agb_reader = AGBDataReader('datasets/AllNLI')
+agb_reader = AGBDataReader('datasets/AGB')
 train_num_labels = agb_reader.get_num_labels()
 model_save_path = 'output/training_agb_'+model_name+'-'+datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
@@ -54,7 +54,7 @@ evaluator = LabelAccuracyEvaluator(dev_dataloader)
 # Configure the training
 num_epochs = 2
 
-warmup_steps = math.ceil(len(train_data) * num_epochs / batch_size * 0.1)  #10% of train data for warm-up
+warmup_steps = math.ceil(len(train_data) * num_epochs / batch_size * 0.1)  # 10% of train data for warm-up
 logging.info("Warmup-steps: {}".format(warmup_steps))
 
 
@@ -66,7 +66,6 @@ model.fit(train_objectives=[(train_dataloader, train_loss)],
           warmup_steps=warmup_steps,
           output_path=model_save_path
           )
-
 
 
 ##############################################################################
