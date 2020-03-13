@@ -18,7 +18,7 @@ class AGBDataReader(object):
         with three columns (s1 \t s2 \t [0|1]
         """
         with open(os.path.join(self.dataset_folder, filename)) as f:
-            rows = csv.reader(f, delimiter="\t")
+            rows = csv.reader(f, delimiter="\t", quoting=csv.QUOTE_NONE)
 
             examples = []
             id = 0
