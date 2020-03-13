@@ -41,8 +41,9 @@ class SentencesDataset(Dataset):
             the input examples for the training
         :param model
             the Sentence BERT model for the conversion
-        :return: a SmartBatchingDataset usable to train the model with SentenceTransformer.smart_batching_collate as the collate_fn
-            for the DataLoader
+        :return:
+            a SmartBatchingDataset usable to train the model with SentenceTransformer.smart_batching_collate
+            as the collate_fn for the DataLoader
         """
         num_texts = len(examples[0].texts)
         inputs = [[] for _ in range(num_texts)]
@@ -64,8 +65,10 @@ class SentencesDataset(Dataset):
             tokenized_texts = [model.tokenize(text) for text in example.texts]
 
             for i, token in enumerate(tokenized_texts):
-                if max_seq_length != None and max_seq_length > 0 and len(token) >= max_seq_length:
+                if max_seq_length and len(token) >= max_seq_length > 0:
                     too_long[i] += 1
+                    # Instead, shorten to correct length, and append EOS token.
+                    tokenized_texts[i] = token[:max_seq_length-1] + token[-1]
 
             labels.append(example.label)
             for i in range(num_texts):
