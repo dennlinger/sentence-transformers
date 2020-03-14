@@ -49,7 +49,7 @@ train_loss = losses.SoftmaxLoss(model=model,
 logging.info("Read AGB dev dataset")
 dev_data = SentencesDataset(examples=agb_reader.get_examples('dev.tsv'), model=model, shorten=True)
 dev_dataloader = DataLoader(dev_data, shuffle=False, batch_size=batch_size)
-evaluator = LabelAccuracyEvaluator(dev_dataloader)
+evaluator = LabelAccuracyEvaluator(dev_dataloader, softmax_model=train_loss)
 
 # Configure the training
 num_epochs = 2
@@ -77,6 +77,6 @@ model.fit(train_objectives=[(train_dataloader, train_loss)],
 model = SentenceTransformer(model_save_path)
 test_data = SentencesDataset(examples=agb_reader.get_examples('test.tsv'), model=model, shorten=True)
 test_dataloader = DataLoader(test_data, shuffle=False, batch_size=batch_size)
-evaluator = LabelAccuracyEvaluator(test_dataloader)
+evaluator = LabelAccuracyEvaluator(test_dataloader, softmax_model=train_loss)
 
 model.evaluate(evaluator)
