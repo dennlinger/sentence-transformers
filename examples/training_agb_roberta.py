@@ -21,7 +21,7 @@ logging.basicConfig(format='%(asctime)s - %(message)s',
 # Read the dataset
 model_name = 'roberta-base'
 batch_size = 16
-agb_reader = AGBDataReader('datasets/AGB_test')
+agb_reader = AGBDataReader('datasets/AGB')
 train_num_labels = agb_reader.get_num_labels()
 model_save_path = 'output/training_agb_'+model_name+'-'+datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
