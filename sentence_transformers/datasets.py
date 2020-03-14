@@ -80,7 +80,7 @@ class SentencesDataset(Dataset):
                     # Instead, shorten to correct length, and append EOS token.
                     # Still count too_long for analysis purposes though.
                     if self.shorten:
-                        tokenized_texts[i] = token[:max_seq_length-1] + token[-1]
+                        tokenized_texts[i] = token[:max_seq_length-1] + [token[-1]]
 
             labels.append(example.label)
             for i in range(num_texts):
