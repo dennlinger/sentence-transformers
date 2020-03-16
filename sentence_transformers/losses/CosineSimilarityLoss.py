@@ -21,3 +21,23 @@ class CosineSimilarityLoss(nn.Module):
             return loss
         else:
             return reps, output
+
+
+class CosineSimilarityLossWithCrossEntropy(nn.Module):
+    def __init__(self, model: SentenceTransformer):
+        super(CosineSimilarityLossWithCrossEntropy, self).__init__()
+        self.model = model
+
+
+    def forward(self, sentence_features: Iterable[Dict[str, Tensor]], labels: Tensor):
+        reps = [self.model(sentence_feature)['sentence_embedding'] for sentence_feature in sentence_features]
+        rep_a, rep_b = reps
+
+        output = torch.gt(torch.cosine_similarity(rep_a, rep_b),0.5).type(torch.FloatTensor)
+        loss_fct = nn.BCELoss()
+
+        if labels is not None:
+            loss = loss_fct(output.cuda(), labels.view(-1).type(torch.FloatTensor).cuda())
+            return loss
+        else:
+            return reps, output
