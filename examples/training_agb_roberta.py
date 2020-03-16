@@ -20,7 +20,7 @@ logging.basicConfig(format='%(asctime)s - %(message)s',
 
 # Read the dataset
 model_name = 'roberta-base'
-batch_size = 16
+batch_size = 32
 agb_reader = AGBDataReader('datasets/AGB')
 train_num_labels = agb_reader.get_num_labels()
 model_save_path = 'output/training_agb_'+model_name+'-'+datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
@@ -62,7 +62,7 @@ logging.info("Warmup-steps: {}".format(warmup_steps))
 model.fit(train_objectives=[(train_dataloader, train_loss)],
           evaluator=evaluator,
           epochs=num_epochs,
-          evaluation_steps=1000,
+          evaluation_steps=10000,
           warmup_steps=warmup_steps,
           output_path=model_save_path
           )
