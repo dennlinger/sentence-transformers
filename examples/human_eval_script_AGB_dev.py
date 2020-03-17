@@ -16,6 +16,7 @@ import numpy as np
 import csv
 import sys
 import os
+import os
 
 csv.field_size_limit(sys.maxsize)
 
@@ -98,7 +99,9 @@ np.random.seed(12)
 indices = np.random.choice(range(len(samples)), len(samples), replace=False)
 
 indices = indices[start_sample:start_sample+num_samples]
-
+#make directory if it doesnt exists
+if not os.path.exists(model_save_path):
+    os.makedirs(model_save_path)
 ##############################################################################
 #
 # Load the dev samples and ask for human evaluation after output.
@@ -117,4 +120,4 @@ for idx in indices:
     print("\n\n\n")
 
 with open(os.path.join(model_save_path, "judgements.txt"), "w") as f:
-    f.writelines(answers)
+    f.writelines('\n'.join('{} {}'.format(x[0],x[1]) for x in answers))
