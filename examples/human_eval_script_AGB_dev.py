@@ -116,5 +116,7 @@ for idx in indices:
     answers.append(answertuple(answer, curr_sample.label))
     print("\n\n\n")
 
+os.makedirs(model_save_path, exist_ok=True)
 with open(os.path.join(model_save_path, "judgements.txt"), "w") as f:
-    f.writelines(answers)
+    for answer in answers:
+        f.write(f"{answer[0]}\t{answer[1]}\n")
