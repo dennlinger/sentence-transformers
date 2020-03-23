@@ -1,7 +1,9 @@
 from . import InputExample
 import csv
 import gzip
+import sys
 import os
+csv.field_size_limit(sys.maxsize)
 
 class TripletReader(object):
     """
