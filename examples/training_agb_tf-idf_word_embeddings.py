@@ -28,7 +28,7 @@ logging.basicConfig(format='%(asctime)s - %(message)s',
 
 # Read the dataset
 batch_size = 32
-agb_reader = AGBDataReader('datasets/AGB')
+agb_reader = AGBDataReader('datasets/AGB_og_consec')
 model_save_path = 'output/training_tf-idf_word_embeddings-' + datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 # os.environ["CUDA_VISIBLE_DEVICES"]="1"# for local testing
 train_num_labels = agb_reader.get_num_labels()

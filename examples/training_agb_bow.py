@@ -32,9 +32,9 @@ logging.basicConfig(format='%(asctime)s - %(message)s',
 
 # Read the dataset
 batch_size = 32
-agb_reader = AGBDataReader('datasets/AGB')
+agb_reader = AGBDataReader('datasets/AGB_og_consec')
 model_save_path = 'output/training_agb_bow-' + datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-create_word_frequencies = True  # if set to true it will generate the term frequency file from all the agbs
+create_word_frequencies = False  # if set to true it will generate the term frequency file from all the agbs
 train_num_labels = agb_reader.get_num_labels()
 
 # Create the vocab for the BoW model
@@ -69,7 +69,6 @@ weights = {}
 lines = open('datasets/extras/agb_doc_frequencies.txt').readlines()
 num_docs = int(lines[0])
 for line in lines[1:]:
-    print(line.lower().strip().split("\t"))
     word, freq = line.lower().strip().split("\t")
     if word in stop_words:
         continue
