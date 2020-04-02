@@ -120,7 +120,7 @@ class EmbeddingSimilarityEvaluator(SentenceEvaluator):
                     writer.writerow(self.csv_headers)
 
                 writer.writerow([epoch, steps, eval_pearson_cosine, eval_spearman_cosine, eval_pearson_euclidean,
-                                 eval_spearman_euclidean, eval_pearson_manhattan, eval_spearman_manhattan, eval_pearson_dot, eval_spearman_dot])
+                                 eval_spearman_euclidean, eval_pearson_manhattan, eval_spearman_manhattan, eval_peoarson_dot, eval_spearman_dot])
 
 
         if self.main_similarity == SimilarityFunction.COSINE:

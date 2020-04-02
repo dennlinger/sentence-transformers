@@ -20,9 +20,9 @@ logging.basicConfig(format='%(asctime)s - %(message)s',
 
 # Read the dataset
 model_name = 'roberta-base'
-batch_size = 32
-agb_reader = AGBDataReader('datasets/AGB')
-agb_triplet_reader = TripletReader('datasets/AGB_triplet')
+batch_size = 28
+agb_reader = AGBDataReader('datasets/AGB_og_consec')
+agb_triplet_reader = TripletReader('datasets/AGB_og_consec')
 train_num_labels = agb_reader.get_num_labels()
 model_save_path = 'output/training_agb_triplet_'+model_name+'-'+datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
@@ -41,12 +41,12 @@ model = SentenceTransformer(modules=[word_embedding_model, pooling_model])
 
 # Convert the dataset to a DataLoader ready for training
 logging.info("Read AGB train dataset")
-train_data = SentencesDataset(agb_triplet_reader.get_examples('train_raw_triplet.tsv'), model=model, shorten=True)
+train_data = SentencesDataset(agb_triplet_reader.get_examples('train_raw_consectuive_triplet.tsv'), model=model, shorten=True)
 train_dataloader = DataLoader(train_data, shuffle=True, batch_size=batch_size)
 train_loss = losses.TripletLoss(model=model)
 
 logging.info("Read AGB dev dataset")
-dev_data = SentencesDataset(examples=agb_reader.get_examples('dev.tsv'), model=model, shorten=True)
+dev_data = SentencesDataset(examples=agb_reader.get_examples('dev_raw.tsv'), model=model, shorten=True)
 dev_dataloader = DataLoader(dev_data, shuffle=False, batch_size=batch_size)
 
 dev_loss = losses.SoftmaxLoss(model=model,
@@ -79,7 +79,7 @@ model.fit(train_objectives=[(train_dataloader, train_loss)],
 ##############################################################################
 
 model = SentenceTransformer(model_save_path)
-test_data = SentencesDataset(examples=agb_reader.get_examples('test.tsv'), model=model, shorten=True)
+test_data = SentencesDataset(examples=agb_reader.get_examples('test_raw.tsv'), model=model, shorten=True)
 test_dataloader = DataLoader(test_data, shuffle=False, batch_size=batch_size)
 evaluator = LabelAccuracyEvaluator(test_dataloader, softmax_model=dev_loss)
 
