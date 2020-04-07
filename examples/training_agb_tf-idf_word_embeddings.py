@@ -18,7 +18,8 @@ from sentence_transformers import SentencesDataset, LoggingHandler, SentenceTran
 from sentence_transformers import models, losses
 from sentence_transformers.evaluation import LabelAccuracyEvaluator
 from sentence_transformers.readers import *
-
+import os
+import torch
 #### Just some code to print debug information to stdout
 logging.basicConfig(format='%(asctime)s - %(message)s',
                     datefmt='%Y-%m-%d %H:%M:%S',
@@ -92,6 +93,9 @@ model.fit(train_objectives=[(train_dataloader, train_loss)],
           output_path=model_save_path
           )
 
+os.mkdir(os.path.join(model_save_path,"2_Softmax"))
+torch.save(train_loss.classifier,os.path.join(model_save_path,"2_Softmax/pytorch_model.bin"))
+
 ##############################################################################
 #
 # Load the stored model and evaluate its performance on AGB dataset
@@ -101,6 +105,7 @@ model.fit(train_objectives=[(train_dataloader, train_loss)],
 model = SentenceTransformer(model_save_path)
 test_data = SentencesDataset(examples=agb_reader.get_examples('test_raw.tsv'), model=model, shorten=False)
 test_dataloader = DataLoader(test_data, shuffle=False, batch_size=batch_size)
+train_loss.classifier=torch.load(os.path.join(model_save_path,"2_Softmax/pytorch_model.bin"))
 evaluator = LabelAccuracyEvaluator(test_dataloader, softmax_model=train_loss)
 
 model.evaluate(evaluator)

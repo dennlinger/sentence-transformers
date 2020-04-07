@@ -21,7 +21,7 @@ from sentence_transformers import models, losses
 from sentence_transformers.evaluation import LabelAccuracyEvaluator
 from sentence_transformers.models.tokenizer.WordTokenizer import ENGLISH_STOP_WORDS
 from sentence_transformers.readers import *
-
+import torch
 # nltk.download('punkt')
 #### Just some code to print debug information to stdout
 logging.basicConfig(format='%(asctime)s - %(message)s',
@@ -31,9 +31,9 @@ logging.basicConfig(format='%(asctime)s - %(message)s',
 #### /print debug information to stdout
 
 # Read the dataset
-batch_size = 32
-agb_reader = AGBDataReader('datasets/AGB_og_consec')
-model_save_path = 'output/training_agb_bow-' + datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+batch_size = 46
+agb_reader = AGBDataReader('datasets/AGB')
+model_save_path = 'output2/run1/training_agb_bow-' + datetime.now().strftime("%Y-%m-%d_%H-%M-%S")+"_sections_1"
 create_word_frequencies = False  # if set to true it will generate the term frequency file from all the agbs
 train_num_labels = agb_reader.get_num_labels()
 
@@ -114,7 +114,8 @@ model.fit(train_objectives=[(train_dataloader, train_loss)],
           warmup_steps=warmup_steps,
           output_path=model_save_path
           )
-
+os.mkdir(os.path.join(model_save_path,"2_Softmax"))
+torch.save(train_loss.classifier,os.path.join(model_save_path,"2_Softmax/pytorch_model.bin"))
 ##############################################################################
 #
 # Load the stored model and evaluate its performance on AGB dataset
@@ -124,6 +125,7 @@ model.fit(train_objectives=[(train_dataloader, train_loss)],
 model = SentenceTransformer(model_save_path)
 test_data = SentencesDataset(examples=agb_reader.get_examples('test_raw.tsv'), model=model, shorten=False)
 test_dataloader = DataLoader(test_data, shuffle=False, batch_size=batch_size)
+train_loss.classifier=torch.load(os.path.join(model_save_path,"2_Softmax/pytorch_model.bin"))
 evaluator = LabelAccuracyEvaluator(test_dataloader, softmax_model=train_loss)
 
 model.evaluate(evaluator)
