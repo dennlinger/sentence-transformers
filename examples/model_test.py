@@ -3,13 +3,13 @@ The system RoBERTa trains on the AGB dataset  with softmax loss function.
 At every 1000 training steps, the model is evaluated on the AGB dev set.
 """
 from torch.utils.data import DataLoader
-import math
 from sentence_transformers import models, losses
 from sentence_transformers import SentencesDataset, LoggingHandler, SentenceTransformer
 from sentence_transformers.evaluation import EmbeddingSimilarityEvaluator, LabelAccuracyEvaluator
 from sentence_transformers.readers import *
 import logging
 import torch
+import math
 import os
 from datetime import datetime
 
@@ -23,7 +23,10 @@ logging.basicConfig(format='%(asctime)s - %(message)s',
 # # Read the dataset
 model_name = "/data/daumiller/sentence-transformers/examples/output/training_agb_og_roberta-base-2020-03-26_10-53-54"
 batch_size = 32
-agb_reader = AGBDataReader('datasets/AGB')
+# model_name = "output/training_agb_roberta-base-nli-mean-tokens-2020-03-19_14-10-11_sections_1"
+# batch_size = 46
+
+agb_reader = AGBDataReader('datasets/AGB_og')
 train_num_labels = agb_reader.get_num_labels()
 
 
@@ -65,6 +68,7 @@ torch.save(train_loss, os.path.join(model_name, "classifier.pt"))
 
 logging.info("Read AGB test dataset")
 test_data = SentencesDataset(examples=agb_reader.get_examples('test.tsv'), model=model, shorten=True)
+# test_data = SentencesDataset(examples=agb_reader.get_examples('test_raw.tsv'), model=model, shorten=True)
 test_dataloader = DataLoader(test_data, shuffle=False, batch_size=batch_size)
 evaluator = LabelAccuracyEvaluator(test_dataloader, softmax_model=train_loss)
 
