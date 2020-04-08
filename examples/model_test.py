@@ -35,6 +35,8 @@ model = SentenceTransformer(model_name)
 
 # Don't train model, only train the loss layer, to retrieve results
 model.train(False)
+for param in model.parameters():
+    param.requires_grad = False
 
 logging.info("Read AGB train dataset")
 train_data = SentencesDataset(agb_reader.get_examples('train.tsv'), model=model, shorten=True)
