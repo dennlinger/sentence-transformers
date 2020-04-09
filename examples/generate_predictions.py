@@ -24,7 +24,7 @@ batch_size = 52
 agb_reader = TestAGBReader('datasets/AGB')
 train_num_labels = agb_reader.get_num_labels()
 
-model = SentenceTransformer(model_save_path)
+model = SentenceTransformer(model_save_path, device="cuda:1")
 
 train_loss = losses.SoftmaxLoss(model=model,
                                 sentence_embedding_dimension=model.get_sentence_embedding_dimension(),
