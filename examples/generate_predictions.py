@@ -34,7 +34,10 @@ train_loss.classifier = torch.load(os.path.join(model_save_path, "2_Softmax/pyto
 print("test")
 test_dir = "/data/daumiller/sentence-transformers/examples/datasets/og-test"
 for fn in os.listdir(test_dir):
-    test_data = SentencesDataset(examples=agb_reader.get_examples(fn), model=model, shorten=True)
+    examples = agb_reader.get_examples(fn)
+    if not examples:
+        continue
+    test_data = SentencesDataset(examples=examples, model=model, shorten=True)
     test_dataloader = DataLoader(test_data, shuffle=False, batch_size=batch_size)
     evaluator = LabelGenerationEvaluator(test_dataloader, softmax_model=train_loss)
     model.evaluate(evaluator)
