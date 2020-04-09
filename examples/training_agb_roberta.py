@@ -21,10 +21,10 @@ logging.basicConfig(format='%(asctime)s - %(message)s',
 
 # Read the dataset
 model_name = 'roberta-base'
-batch_size = 24
-agb_reader = AGBDataReader('datasets/AGB')
+batch_size = 22
+agb_reader = AGBDataReader('datasets/AGB_og_consec')
 train_num_labels = agb_reader.get_num_labels()
-model_save_path = 'output/training_agb_'+model_name+'-'+datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+model_save_path = 'output2/run5/training_agb_'+model_name+'-'+datetime.now().strftime("%Y-%m-%d_%H-%M-%S")+"_og_consec_5"
 
 
 # Use RoBERTa for mapping tokens to embeddings
@@ -63,7 +63,7 @@ logging.info("Warmup-steps: {}".format(warmup_steps))
 model.fit(train_objectives=[(train_dataloader, train_loss)],
           evaluator=evaluator,
           epochs=num_epochs,
-          evaluation_steps=1000,
+          evaluation_steps=30000,
           warmup_steps=warmup_steps,
           output_path=model_save_path
           )

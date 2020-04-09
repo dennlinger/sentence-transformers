@@ -73,6 +73,8 @@ model.fit(train_objectives=[(train_dataloader, train_loss)],
           warmup_steps=warmup_steps,
           output_path=model_save_path
           )
+os.mkdir(os.path.join(model_save_path,"2_Softmax"))
+
 torch.save(train_loss.classifier,os.path.join(model_save_path,"2_Softmax/pytorch_model.bin"))
 ##############################################################################
 #
