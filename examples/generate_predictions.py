@@ -18,10 +18,10 @@ logging.basicConfig(format='%(asctime)s - %(message)s',
 #### /print debug information to stdout
 
 # # Read the dataset
-model_save_path = "/home/dennis/sentence-transformers/examples/output/training_agb_avg_word_embeddings-2020-03-27_17-23-51_og_consecutive_1"
-# model_save_path = "/data/salmasian/baselines/run1/training_agb_avg_word_embeddings-2020-04-08_07-36-04_og_consec_1"
+# model_save_path = "/home/dennis/sentence-transformers/examples/output/training_agb_avg_word_embeddings-2020-03-27_17-23-51_og_consecutive_1"
+model_save_path = "/data/salmasian/baselines/run1/training_agb_avg_word_embeddings-2020-04-08_07-36-04_og_consec_1"
 batch_size = 52
-agb_reader = TestAGBReader('datasets/AGB')
+agb_reader = TestAGBReader('datasets/og-test')
 train_num_labels = agb_reader.get_num_labels()
 
 model = SentenceTransformer(model_save_path, device="cuda:1")

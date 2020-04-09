@@ -20,7 +20,7 @@ class TestAGBReader(object):
         with open(os.path.join(self.dataset_folder, filename)) as f:
             data = json.load(f)
 
-        data = data["level1_heading"]
+        data = data["level1_headings"]
         examples = []
         prev_text = data[0]["text"]
         prev_label = data[0]["section"]
