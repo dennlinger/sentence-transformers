@@ -58,6 +58,7 @@ class LabelGenerationEvaluator(SentenceEvaluator):
         self.dataloader.collate_fn = model.smart_batching_collate
         for step, batch in enumerate(tqdm(self.dataloader, desc="Evaluating")):
             features, label_ids = batch_to_device(batch, self.device)
+            print(features)
             with torch.no_grad():
                 _, prediction = self.softmax_model(features, labels=None)
 
