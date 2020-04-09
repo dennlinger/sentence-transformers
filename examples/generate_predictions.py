@@ -15,17 +15,15 @@ logging.basicConfig(format='%(asctime)s - %(message)s',
                     datefmt='%Y-%m-%d %H:%M:%S',
                     level=logging.INFO,
                     handlers=[LoggingHandler()])
-#### /print debug information to stdout    output2/run1/training_agb_roberta-base-2020-04-07_18-44-28_sections_1/
+#### /print debug information to stdout
 
 # # Read the dataset
-# model_save_path = "/home/dennis/sentence-transformers/examples/output/training_agb_avg_word_embeddings-2020-03-27_17-23-51_og_consecutive_1"
-model_save_path = "/data/salmasian/baselines/run1/training_agb_avg_word_embeddings-2020-04-08_07-36-04_og_consec_1"
+model_save_path = "/home/dennis/sentence-transformers/examples/output/training_agb_avg_word_embeddings-2020-03-27_17-23-51_og_consecutive_1"
+# model_save_path = "/data/salmasian/baselines/run1/training_agb_avg_word_embeddings-2020-04-08_07-36-04_og_consec_1"
 batch_size = 52
-agb_reader = AGBDataReader('datasets/AGB')
+agb_reader = TestAGBReader('datasets/AGB')
 train_num_labels = agb_reader.get_num_labels()
 
-
-# Use RoBERTa for mapping tokens to embeddings
 model = SentenceTransformer(model_save_path)
 
 train_loss = losses.SoftmaxLoss(model=model,
@@ -34,7 +32,9 @@ train_loss = losses.SoftmaxLoss(model=model,
 train_loss.classifier = torch.load(os.path.join(model_save_path, "2_Softmax/pytorch_model.bin"))
 
 print("test")
-test_data = SentencesDataset(examples=agb_reader.get_examples('test.tsv'), model=model, shorten=True)
-test_dataloader = DataLoader(test_data, shuffle=False, batch_size=batch_size)
-evaluator = LabelGenerationEvaluator(test_dataloader, softmax_model=train_loss)
-model.evaluate(evaluator)
+test_dir = "/data/daumiller/sentence-transformers/examples/datasets/og-test"
+for fn in os.listdir(test_dir):
+    test_data = SentencesDataset(examples=agb_reader.get_examples(fn), model=model, shorten=True)
+    test_dataloader = DataLoader(test_data, shuffle=False, batch_size=batch_size)
+    evaluator = LabelGenerationEvaluator(test_dataloader, softmax_model=train_loss)
+    model.evaluate(evaluator)
