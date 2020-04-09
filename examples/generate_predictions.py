@@ -40,4 +40,4 @@ for fn in os.listdir(test_dir):
     test_data = SentencesDataset(examples=examples, model=model, shorten=True)
     test_dataloader = DataLoader(test_data, shuffle=False, batch_size=batch_size)
     evaluator = LabelGenerationEvaluator(test_dataloader, softmax_model=train_loss)
-    model.evaluate(evaluator)
+    model.evaluate(evaluator, model_save_path)

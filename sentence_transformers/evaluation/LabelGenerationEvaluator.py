@@ -66,9 +66,6 @@ class LabelGenerationEvaluator(SentenceEvaluator):
 
             if preds is None:
                 preds = prediction.detach().cpu().numpy()
-                print(preds.shape)
-                print(label_ids.shape)
-                print(label_ids)
                 out_label_ids = label_ids.detach().cpu().numpy()
             else:
                 preds = np.append(preds, prediction.detach().cpu().numpy(), axis=0)
