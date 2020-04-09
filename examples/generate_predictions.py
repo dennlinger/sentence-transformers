@@ -37,7 +37,11 @@ for fn in os.listdir(test_dir):
     examples = agb_reader.get_examples(fn)
     if not examples:
         continue
+    if len(examples) == batch_size + 1:
+        batch_size_used = batch_size - 3
+    else:
+        batch_size_used = batch_size
     test_data = SentencesDataset(examples=examples, model=model, shorten=True)
-    test_dataloader = DataLoader(test_data, shuffle=False, batch_size=batch_size)
+    test_dataloader = DataLoader(test_data, shuffle=False, batch_size=batch_size_used)
     evaluator = LabelGenerationEvaluator(test_dataloader, softmax_model=train_loss)
     model.evaluate(evaluator, model_save_path)
