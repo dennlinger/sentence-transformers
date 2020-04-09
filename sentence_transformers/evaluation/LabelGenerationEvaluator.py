@@ -19,7 +19,7 @@ class LabelGenerationEvaluator(SentenceEvaluator):
     The results are written in a CSV. If a CSV already exists, then values are appended.
     """
 
-    def __init__(self, dataloader: DataLoader, name: str = "", softmax_model=None):
+    def __init__(self, dataloader: DataLoader, name: str = "", softmax_model=None, device="cuda:1"):
         """
         Constructs an evaluator for the given dataset
 
@@ -27,7 +27,8 @@ class LabelGenerationEvaluator(SentenceEvaluator):
             the data for the evaluation
         """
         self.dataloader = dataloader
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        # self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.device = device
         self.name = name
         self.softmax_model = softmax_model
         self.softmax_model.to(self.device)
@@ -68,11 +69,12 @@ class LabelGenerationEvaluator(SentenceEvaluator):
                 print(preds.shape)
                 print(label_ids.shape)
                 print(label_ids)
-                out_label_ids = label_ids["labels"].detach().cpu().numpy()
+                out_label_ids = label_ids.detach().cpu().numpy()
             else:
                 preds = np.append(preds, prediction.detach().cpu().numpy(), axis=0)
-                out_label_ids = np.append(out_label_ids, label_ids["labels"].detach().cpu().numpy(), axis=0)
+                out_label_ids = np.append(out_label_ids, label_ids.detach().cpu().numpy(), axis=0)
 
+        preds = np.argmax(preds, axis=1)
         if output_path is not None:
             csv_path = os.path.join(output_path, self.csv_file)
             label_path = os.path.join(output_path, self.csv_labels)
