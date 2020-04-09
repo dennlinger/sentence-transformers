@@ -78,14 +78,14 @@ class LabelGenerationEvaluator(SentenceEvaluator):
             if not os.path.isfile(csv_path):
                 with open(csv_path, mode="w", encoding="utf-8") as f:
                     writer = csv.writer(f)
-                    writer.writerow([preds])
+                    writer.writerow(preds)
                 with open(label_path, mode="w", encoding="utf-8") as f:
                     writer = csv.writer(f)
                     writer.writerow(out_label_ids)
             else:
                 with open(csv_path, mode="a", encoding="utf-8") as f:
                     writer = csv.writer(f)
-                    writer.writerow([preds])
+                    writer.writerow(preds)
                 with open(label_path, mode="a", encoding="utf-8") as f:
                     writer = csv.writer(f)
                     writer.writerow(out_label_ids)
