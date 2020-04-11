@@ -24,9 +24,12 @@ for i in range(1, 6):
     for model_dir in sorted(os.listdir(run_dir)):
         curr_dir = os.path.join(run_dir, model_dir)
         # skip non-consecutive models
-        if not f"og_{i}" in curr_dir:
+        if "og_" not in curr_dir:
             continue
         print(f"Working on model {model_dir}")
+        # Delete when we re-evaluate...
+        os.remove(os.path.join(curr_dir, "prediction_labels.csv"))
+        os.remove(os.path.join(curr_dir, "prediction_results.csv"))
         model_save_path = curr_dir
         batch_size = 52
         agb_reader = TestAGBReader('datasets/og-test')
@@ -41,7 +44,7 @@ for i in range(1, 6):
 
         print("test")
         test_dir = "/data/daumiller/sentence-transformers/examples/datasets/og-test"
-        for fn in os.listdir(test_dir):
+        for fn in sorted(os.listdir(test_dir)):
             examples = agb_reader.get_examples(fn)
             if not examples:
                 continue
