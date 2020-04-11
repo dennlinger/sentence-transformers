@@ -20,7 +20,7 @@ logging.basicConfig(format='%(asctime)s - %(message)s',
 # # Read the dataset
 root_dir = "/data/salmasian/baselines"
 for i in range(1, 6):
-    run_dir = os.path.join(root_dir, f"run_{i}")
+    run_dir = os.path.join(root_dir, f"run{i}")
     for model_dir in sorted(os.listdir(run_dir)):
         curr_dir = os.path.join(run_dir, model_dir)
         # skip non-consecutive models
