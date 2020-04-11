@@ -33,7 +33,7 @@ train_loss.classifier = torch.load(os.path.join(model_save_path, "2_Softmax/pyto
 
 print("test")
 test_dir = "/data/daumiller/sentence-transformers/examples/datasets/og-test"
-for fn in os.listdir(test_dir):
+for fn in sorted(os.listdir(test_dir)):
     examples = agb_reader.get_examples(fn)
     if not examples:
         continue
