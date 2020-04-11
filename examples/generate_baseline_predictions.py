@@ -26,6 +26,7 @@ for i in range(1, 6):
         # skip non-consecutive models
         if not "og_consec" in curr_dir:
             continue
+        print(f"Working on model {model_dir}")
         model_save_path = curr_dir
         batch_size = 52
         agb_reader = TestAGBReader('datasets/og-test')
