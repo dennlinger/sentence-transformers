@@ -23,7 +23,7 @@ logging.basicConfig(format='%(asctime)s - %(message)s',
 # model_save_path = "/data/salmasian/baselines/run1/training_agb_avg_word_embeddings-2020-04-08_07-36-04_og_consec_1"
 model_save_path = "/data/daumiller/sentence-transformers/examples/training_agb_roberta-base-2020-04-07_18-44-07_og_consec_1"
 
-batch_size = 52
+batch_size = 24
 agb_reader = TestAGBReader('datasets/og-test')
 train_num_labels = agb_reader.get_num_labels()
 
