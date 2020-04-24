@@ -56,4 +56,4 @@ for fn in sorted(os.listdir(test_dir)):
     model.evaluate(evaluator, model_save_path)
 
 end_time = time.time()
-print(f"Evaluation of 100 files took {end_time-start_time:.2f} seconds per file.")
+logging.info(f"Evaluation of 100 files took {end_time-start_time:.2f} seconds per file.")
