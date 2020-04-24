@@ -9,6 +9,7 @@ from sentence_transformers.evaluation import EmbeddingSimilarityEvaluator, Label
 from sentence_transformers.readers import *
 import logging
 import torch
+import time
 import os
 #### Just some code to print debug information to stdout
 logging.basicConfig(format='%(asctime)s - %(message)s',
@@ -19,7 +20,9 @@ logging.basicConfig(format='%(asctime)s - %(message)s',
 
 # # Read the dataset
 # model_save_path = "/home/dennis/sentence-transformers/examples/output/training_agb_avg_word_embeddings-2020-03-27_17-23-51_og_consecutive_1"
-model_save_path = "/data/salmasian/baselines/run1/training_agb_avg_word_embeddings-2020-04-08_07-36-04_og_consec_1"
+# model_save_path = "/data/salmasian/baselines/run1/training_agb_avg_word_embeddings-2020-04-08_07-36-04_og_consec_1"
+model_save_path = "/data/daumiller/sentence-transformers/examples/training_agb_roberta-base-2020-04-07_18-44-07_og_consec_1"
+
 batch_size = 52
 agb_reader = TestAGBReader('datasets/og-test')
 train_num_labels = agb_reader.get_num_labels()
@@ -33,7 +36,13 @@ train_loss.classifier = torch.load(os.path.join(model_save_path, "2_Softmax/pyto
 
 print("test")
 test_dir = "/data/daumiller/sentence-transformers/examples/datasets/og-test"
+i = 100
+start_time = time.time()
 for fn in sorted(os.listdir(test_dir)):
+    i += 1
+
+    if i >= 100:
+        break
     examples = agb_reader.get_examples(fn)
     if not examples:
         continue
@@ -45,3 +54,6 @@ for fn in sorted(os.listdir(test_dir)):
     test_dataloader = DataLoader(test_data, shuffle=False, batch_size=batch_size_used)
     evaluator = LabelGenerationEvaluator(test_dataloader, softmax_model=train_loss)
     model.evaluate(evaluator, model_save_path)
+
+end_time = time.time()
+print(f"Evaluation of 100 files took {end_time-start_time:.2f} seconds per file.")
