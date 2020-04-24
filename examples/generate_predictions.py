@@ -23,7 +23,7 @@ logging.basicConfig(format='%(asctime)s - %(message)s',
 # model_save_path = "/data/salmasian/baselines/run1/training_agb_avg_word_embeddings-2020-04-08_07-36-04_og_consec_1"
 model_save_path = "/data/daumiller/sentence-transformers/examples/training_agb_roberta-base-2020-04-07_18-44-07_og_consec_1"
 
-batch_size = 24
+batch_size = 48
 agb_reader = TestAGBReader('datasets/og-test')
 train_num_labels = agb_reader.get_num_labels()
 
@@ -37,11 +37,12 @@ train_loss.classifier = torch.load(os.path.join(model_save_path, "2_Softmax/pyto
 print("test")
 test_dir = "/data/daumiller/sentence-transformers/examples/datasets/og-test"
 i = 0
+total = 200
 start_time = time.time()
 for fn in sorted(os.listdir(test_dir)):
     i += 1
 
-    if i >= 100:
+    if i >= total:
         break
     examples = agb_reader.get_examples(fn)
     if not examples:
@@ -56,4 +57,4 @@ for fn in sorted(os.listdir(test_dir)):
     model.evaluate(evaluator, model_save_path)
 
 end_time = time.time()
-logging.info(f"Evaluation of 100 files took {end_time-start_time:.2f} seconds per file.")
+logging.info(f"Evaluation of 100 files took {(end_time-start_time)/total:.2f} seconds per file.")
