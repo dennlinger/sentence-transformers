@@ -36,7 +36,7 @@ train_loss.classifier = torch.load(os.path.join(model_save_path, "2_Softmax/pyto
 
 print("test")
 test_dir = "/data/daumiller/sentence-transformers/examples/datasets/og-test"
-i = 100
+i = 0
 start_time = time.time()
 for fn in sorted(os.listdir(test_dir)):
     i += 1
