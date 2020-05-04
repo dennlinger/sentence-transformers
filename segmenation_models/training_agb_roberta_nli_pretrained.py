@@ -22,24 +22,24 @@ logging.basicConfig(format='%(asctime)s - %(message)s',
 
 # Read the dataset
 model_name = 'roberta-base-nli-mean-tokens'
-batch_size = 64
-agb_reader = AGBDataReader('datasets/AGB')
+batch_size = 22
+agb_reader = AGBDataReader('datasets/AGB_og')
 train_num_labels = agb_reader.get_num_labels()
-model_save_path = 'output/training_agb_'+model_name+'-'+datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+model_save_path = 'output2/run5/training_agb_'+model_name+'-'+datetime.now().strftime("%Y-%m-%d_%H-%M-%S")+"_og_5"
 
 model = SentenceTransformer(model_name)
 
 
 # Convert the dataset to a DataLoader ready for training
 logging.info("Read AGB train dataset")
-train_data = SentencesDataset(agb_reader.get_examples('train.tsv'), model=model, shorten=True)
+train_data = SentencesDataset(agb_reader.get_examples('train_raw.tsv'), model=model, shorten=True)
 train_dataloader = DataLoader(train_data, shuffle=True, batch_size=batch_size)
 train_loss = losses.SoftmaxLoss(model=model,
                                 sentence_embedding_dimension=model.get_sentence_embedding_dimension(),
                                 num_labels=train_num_labels)
 
 logging.info("Read AGB dev dataset")
-dev_data = SentencesDataset(examples=agb_reader.get_examples('dev.tsv'), model=model, shorten=True)
+dev_data = SentencesDataset(examples=agb_reader.get_examples('dev_raw.tsv'), model=model, shorten=True)
 dev_dataloader = DataLoader(dev_data, shuffle=False, batch_size=batch_size)
 evaluator = LabelAccuracyEvaluator(dev_dataloader, softmax_model=train_loss)
 
@@ -54,7 +54,7 @@ logging.info("Warmup-steps: {}".format(warmup_steps))
 model.fit(train_objectives=[(train_dataloader, train_loss)],
           evaluator=evaluator,
           epochs=num_epochs,
-          evaluation_steps=10000,
+          evaluation_steps=30000,
           warmup_steps=warmup_steps,
           output_path=model_save_path
           )
@@ -70,7 +70,7 @@ torch.save(train_loss.classifier,os.path.join(model_save_path,"2_Softmax/pytorch
 ##############################################################################
 
 model = SentenceTransformer(model_save_path)
-test_data = SentencesDataset(examples=agb_reader.get_examples('test.tsv'), model=model, shorten=True)
+test_data = SentencesDataset(examples=agb_reader.get_examples('test_raw.tsv'), model=model, shorten=True)
 test_dataloader = DataLoader(test_data, shuffle=False, batch_size=batch_size)
 train_loss.classifier=torch.load(os.path.join(model_save_path,"2_Softmax/pytorch_model.bin"))
 evaluator = LabelAccuracyEvaluator(test_dataloader, softmax_model=train_loss)

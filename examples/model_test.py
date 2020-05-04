@@ -15,12 +15,12 @@ logging.basicConfig(format='%(asctime)s - %(message)s',
                     datefmt='%Y-%m-%d %H:%M:%S',
                     level=logging.INFO,
                     handlers=[LoggingHandler()])
-#### /print debug information to stdout    output2/run1/training_agb_roberta-base-2020-04-07_18-44-28_sections_1/
+#### /print debug information to stdout
 
 # # Read the dataset
-model_save_path = "output2/run5/training_agb_bow-2020-04-08_23-10-14_og_consec_5"
+model_save_path = "output2/run3/training_agb_roberta-base-nli-mean-tokens-2020-04-10_15-59-19_og_3/"
 batch_size = 52
-agb_reader = AGBDataReader('datasets/AGB')
+agb_reader = AGBDataReader('datasets/AGB_og')
 train_num_labels = agb_reader.get_num_labels()
 
 
