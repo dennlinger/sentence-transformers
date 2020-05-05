@@ -30,7 +30,7 @@ model = SentenceTransformer(model_save_path)
 train_loss = losses.SoftmaxLoss(model=model,
                                 sentence_embedding_dimension=model.get_sentence_embedding_dimension(),
                                 num_labels=train_num_labels)
-train_loss.classifier=torch.load(os.path.join(model_save_path,"2_Softmax/pytorch_model.bin"))
+train_loss.classifier = torch.load(os.path.join(model_save_path, "2_Softmax/pytorch_model.bin"))
 
 print("dev")
 test_data = SentencesDataset(examples=agb_reader.get_examples('dev_raw.tsv'), model=model, shorten=True)
