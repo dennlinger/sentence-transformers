@@ -22,6 +22,7 @@ from sentence_transformers.evaluation import LabelAccuracyEvaluator
 from sentence_transformers.models.tokenizer.WordTokenizer import ENGLISH_STOP_WORDS
 from sentence_transformers.readers import *
 import torch
+import argparse
 # nltk.download('punkt')
 #### Just some code to print debug information to stdout
 logging.basicConfig(format='%(asctime)s - %(message)s',
@@ -29,103 +30,124 @@ logging.basicConfig(format='%(asctime)s - %(message)s',
                     level=logging.INFO,
                     handlers=[LoggingHandler()])
 #### /print debug information to stdout
+if __name__ == "__main__":
 
-# Read the dataset
-batch_size = 46
-agb_reader = AGBDataReader('datasets/AGB')
-model_save_path = 'output2/run1/training_agb_bow-' + datetime.now().strftime("%Y-%m-%d_%H-%M-%S")+"_sections_1"
-create_word_frequencies = False  # if set to true it will generate the term frequency file from all the agbs
-train_num_labels = agb_reader.get_num_labels()
+    parser = argparse.ArgumentParser(
+        description='train a shallow network with bag of words for classification.')
+    parser.add_argument('--num_epochs', help='training epochs',
+                        type=int, default=10)
+    parser.add_argument('--batch_size', help='training batch size',
+                        type=int, default=32)
+    parser.add_argument('--output_folder', help='The location for the output folder ',
+                        default="output/")
+    parser.add_argument('--dataset_folder', help='The location for the dataset ',
+                        default="datasets/AGB")
+    parser.add_argument('--raw_dataset_folder', help='The location for the raw dataset for creating word frequencies',
+                        default="./tos-section-analyzer/tos-data-cleaned")
+    parser.add_argument('--path_to_word_frequencies',
+                        help='The location of the word frequency file for the entire corpus, if create_word_frequencies= False, will create from scratch',
+                        default="datasets/extras/agb_doc_frequencies.txt")
+    parser.add_argument('--create_word_frequencies',
+                        help='if set will create the word frequency file from scratch',action='store_true',
+                        default=False)
 
-# Create the vocab for the BoW model
-stop_words = ENGLISH_STOP_WORDS
-max_vocab_size = 25000  # This is also the size of the BoW sentence vector.
+    args = parser.parse_args()
+    # Read the dataset
+    batch_size = args.batch_size
+    agb_reader = AGBDataReader(args.dataset_folder)
+    model_save_path = os.path.join(args.output_folder,'training_agb_bow-' + datetime.now().strftime("%Y-%m-%d_%H-%M-%S"))
+    create_word_frequencies = args.create_word_frequencies  # if set to true it will generate the term frequency file from all the agbs
+    train_num_labels = agb_reader.get_num_labels()
 
-# create a file with the word frequncies
-if create_word_frequencies:
-    folder = "/home/salmasian/tos-section-analyzer/tos-data-cleaned"
-    counter = Counter()
-    all_words = []
-    for f in tqdm(sorted(os.listdir(folder))):
-        with open(os.path.join(folder, f)) as fp:
-            tos = json.load(fp)
+    # Create the vocab for the BoW model
+    stop_words = ENGLISH_STOP_WORDS
+    max_vocab_size = 25000  # This is also the size of the BoW sentence vector.
 
-        for section in tos["level1_headings"]:
-            text = re.sub("</?[^>]*>", "", section["text"].strip())
+    # create a file with the word frequncies
+    if create_word_frequencies:
+        folder = args.raw_dataset_folder
+        counter = Counter()
+        all_words = []
+        for f in tqdm(sorted(os.listdir(folder))):
+            with open(os.path.join(folder, f)) as fp:
+                tos = json.load(fp)
 
-            all_words = all_words + [word.lower() for word in nltk.tokenize.word_tokenize(text) if
-                                     len(word) > 1 and not word.isnumeric()]
-            # counter.update(w.lower().rstrip(punctuation) for w in text.split(' ') if len(w)>0 and w[0] != "(")
-    all_word_freq = nltk.FreqDist(all_words)
-    with open("datasets/extras/agb_doc_frequencies.txt", "w") as f:
-        f.write(str(len(os.listdir(folder))) + "\n")
-        for word, count in all_word_freq.most_common():
-            if len(word) > 1:
-                f.write(f"{word}\t{count}\n")
+            for section in tos["level1_headings"]:
+                text = re.sub("</?[^>]*>", "", section["text"].strip())
 
-# Read the most common max_vocab_size words. Skip stop-words
-vocab = set()
-weights = {}
-lines = open('datasets/extras/agb_doc_frequencies.txt').readlines()
-num_docs = int(lines[0])
-for line in lines[1:]:
-    word, freq = line.lower().strip().split("\t")
-    if word in stop_words:
-        continue
+                all_words = all_words + [word.lower() for word in nltk.tokenize.word_tokenize(text) if
+                                         len(word) > 1 and not word.isnumeric()]
+                # counter.update(w.lower().rstrip(punctuation) for w in text.split(' ') if len(w)>0 and w[0] != "(")
+        all_word_freq = nltk.FreqDist(all_words)
+        with open(args.path_to_word_frequencies, "w") as f:
+            f.write(str(len(os.listdir(folder))) + "\n")
+            for word, count in all_word_freq.most_common():
+                if len(word) > 1:
+                    f.write(f"{word}\t{count}\n")
 
-    vocab.add(word)
-    weights[word] = math.log(num_docs / int(freq))
+    # Read the most common max_vocab_size words. Skip stop-words
+    vocab = set()
+    weights = {}
+    lines = open(args.path_to_word_frequencies).readlines()
+    num_docs = int(lines[0])
+    for line in lines[1:]:
+        word, freq = line.lower().strip().split("\t")
+        if word in stop_words:
+            continue
 
-    if len(vocab) >= max_vocab_size:
-        break
+        vocab.add(word)
+        weights[word] = math.log(num_docs / int(freq))
 
-# Create the BoW model. Because we set word_weights to the IDF values and cumulative_term_frequency=True, we
-# get tf-idf vectors. Set word_weights to an empty dict and cumulative_term_frequency=False to get a 1-hot sentence encoding
-bow = models.BoW(vocab=vocab, word_weights=weights, cumulative_term_frequency=True)
+        if len(vocab) >= max_vocab_size:
+            break
 
-# Add two trainable feed-forward networks (DAN) with max_vocab_size -> 768 -> 512 dimensions.
-sent_embeddings_dimension = max_vocab_size
-dan1 = models.Dense(in_features=sent_embeddings_dimension, out_features=768)
-dan2 = models.Dense(in_features=768, out_features=512)
+    # Create the BoW model. Because we set word_weights to the IDF values and cumulative_term_frequency=True, we
+    # get tf-idf vectors. Set word_weights to an empty dict and cumulative_term_frequency=False to get a 1-hot sentence encoding
+    bow = models.BoW(vocab=vocab, word_weights=weights, cumulative_term_frequency=True)
 
-model = SentenceTransformer(modules=[bow, dan1, dan2])
+    # Add two trainable feed-forward networks (DAN) with max_vocab_size -> 768 -> 512 dimensions.
+    sent_embeddings_dimension = max_vocab_size
+    dan1 = models.Dense(in_features=sent_embeddings_dimension, out_features=768)
+    dan2 = models.Dense(in_features=768, out_features=512)
 
-# Convert the dataset to a DataLoader ready for training
-logging.info("Read AGB train dataset")
-train_data = SentencesDataset(agb_reader.get_examples('train_raw.tsv'), model=model, shorten=False)
-train_dataloader = DataLoader(train_data, shuffle=True, batch_size=batch_size)
-train_loss = losses.SoftmaxLoss(model=model,
-                                sentence_embedding_dimension=model.get_sentence_embedding_dimension(),
-                                num_labels=train_num_labels)
-logging.info("Read AGB dev dataset")
-dev_data = SentencesDataset(examples=agb_reader.get_examples('dev_raw.tsv'), model=model, shorten=False)
-dev_dataloader = DataLoader(dev_data, shuffle=False, batch_size=batch_size)
-evaluator = LabelAccuracyEvaluator(dev_dataloader, softmax_model=train_loss)
+    model = SentenceTransformer(modules=[bow, dan1, dan2])
 
-# Configure the training
-num_epochs = 10
-warmup_steps = math.ceil(len(train_data) * num_epochs / batch_size * 0.1)  # 10% of train data for warm-up
-logging.info("Warmup-steps: {}".format(warmup_steps))
+    # Convert the dataset to a DataLoader ready for training
+    logging.info("Read AGB train dataset")
+    train_data = SentencesDataset(agb_reader.get_examples('train_raw.tsv'), model=model, shorten=False)
+    train_dataloader = DataLoader(train_data, shuffle=True, batch_size=batch_size)
+    train_loss = losses.SoftmaxLoss(model=model,
+                                    sentence_embedding_dimension=model.get_sentence_embedding_dimension(),
+                                    num_labels=train_num_labels)
+    logging.info("Read AGB dev dataset")
+    dev_data = SentencesDataset(examples=agb_reader.get_examples('dev_raw.tsv'), model=model, shorten=False)
+    dev_dataloader = DataLoader(dev_data, shuffle=False, batch_size=batch_size)
+    evaluator = LabelAccuracyEvaluator(dev_dataloader, softmax_model=train_loss)
 
-# Train the model
-model.fit(train_objectives=[(train_dataloader, train_loss)],
-          evaluator=evaluator,
-          epochs=num_epochs,
-          warmup_steps=warmup_steps,
-          output_path=model_save_path
-          )
-os.mkdir(os.path.join(model_save_path,"2_Softmax"))
-torch.save(train_loss.classifier,os.path.join(model_save_path,"2_Softmax/pytorch_model.bin"))
-##############################################################################
-#
-# Load the stored model and evaluate its performance on AGB dataset
-#
-##############################################################################
+    # Configure the training
+    num_epochs = args.num_epochs
+    warmup_steps = math.ceil(len(train_data) * num_epochs / batch_size * 0.1)  # 10% of train data for warm-up
+    logging.info("Warmup-steps: {}".format(warmup_steps))
 
-model = SentenceTransformer(model_save_path)
-test_data = SentencesDataset(examples=agb_reader.get_examples('test_raw.tsv'), model=model, shorten=False)
-test_dataloader = DataLoader(test_data, shuffle=False, batch_size=batch_size)
-train_loss.classifier=torch.load(os.path.join(model_save_path,"2_Softmax/pytorch_model.bin"))
-evaluator = LabelAccuracyEvaluator(test_dataloader, softmax_model=train_loss)
+    # Train the model
+    model.fit(train_objectives=[(train_dataloader, train_loss)],
+              evaluator=evaluator,
+              epochs=num_epochs,
+              warmup_steps=warmup_steps,
+              output_path=model_save_path
+              )
+    os.mkdir(os.path.join(model_save_path,"2_Softmax"))
+    torch.save(train_loss.classifier,os.path.join(model_save_path,"2_Softmax/pytorch_model.bin"))
+    ##############################################################################
+    #
+    # Load the stored model and evaluate its performance on AGB dataset
+    #
+    ##############################################################################
 
-model.evaluate(evaluator)
+    model = SentenceTransformer(model_save_path)
+    test_data = SentencesDataset(examples=agb_reader.get_examples('test_raw.tsv'), model=model, shorten=False)
+    test_dataloader = DataLoader(test_data, shuffle=False, batch_size=batch_size)
+    train_loss.classifier=torch.load(os.path.join(model_save_path,"2_Softmax/pytorch_model.bin"))
+    evaluator = LabelAccuracyEvaluator(test_dataloader, softmax_model=train_loss)
+
+    model.evaluate(evaluator)

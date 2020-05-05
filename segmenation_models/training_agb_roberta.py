@@ -2,6 +2,8 @@
 The system RoBERTa trains on the AGB dataset  with softmax loss function.
 At every 1000 training steps, the model is evaluated on the AGB dev set.
 """
+import argparse
+
 from torch.utils.data import DataLoader
 import math
 from sentence_transformers import models, losses
@@ -18,67 +20,84 @@ logging.basicConfig(format='%(asctime)s - %(message)s',
                     level=logging.INFO,
                     handlers=[LoggingHandler()])
 #### /print debug information to stdout
+if __name__ == "__main__":
 
-# Read the dataset
-model_name = 'roberta-base'
-batch_size = 22
-agb_reader = AGBDataReader('datasets/AGB_og_consec')
-train_num_labels = agb_reader.get_num_labels()
-model_save_path = 'output2/run5/training_agb_'+model_name+'-'+datetime.now().strftime("%Y-%m-%d_%H-%M-%S")+"_og_consec_5"
-
-
-# Use RoBERTa for mapping tokens to embeddings
-word_embedding_model = models.RoBERTa(model_name)
-
-# Apply mean pooling to get one fixed sized sentence vector
-pooling_model = models.Pooling(word_embedding_model.get_word_embedding_dimension(),
-                               pooling_mode_mean_tokens=True,
-                               pooling_mode_cls_token=False,
-                               pooling_mode_max_tokens=False)
-
-model = SentenceTransformer(modules=[word_embedding_model, pooling_model])
+    parser = argparse.ArgumentParser(
+        description='train a shallow network with tfidf for classification.')
+    parser.add_argument('--num_epochs', help='training epochs',
+                        type=int, default=2)
+    parser.add_argument('--batch_size', help='training batch size',
+                        type=int, default=32)
+    parser.add_argument('--intermediate_eval_steps', help='run evaluation after how many steps.',
+                        type=int, default=30000)
+    parser.add_argument('--output_folder', help='The location for the output folder ',
+                        default="output/")
+    parser.add_argument('--dataset_folder', help='The location for the dataset ',
+                        default="'datasets/AGB_og_consec'")
 
 
-# Convert the dataset to a DataLoader ready for training
-logging.info("Read AGB train dataset")
-train_data = SentencesDataset(agb_reader.get_examples('train_raw.tsv'), model=model, shorten=True)
-train_dataloader = DataLoader(train_data, shuffle=True, batch_size=batch_size)
-train_loss = losses.SoftmaxLoss(model=model,
-                                sentence_embedding_dimension=model.get_sentence_embedding_dimension(),
-                                num_labels=train_num_labels)
-
-logging.info("Read AGB dev dataset")
-dev_data = SentencesDataset(examples=agb_reader.get_examples('dev_raw.tsv'), model=model, shorten=True)
-dev_dataloader = DataLoader(dev_data, shuffle=False, batch_size=batch_size)
-evaluator = LabelAccuracyEvaluator(dev_dataloader, softmax_model=train_loss)
-
-# Configure the training
-num_epochs = 2
-
-warmup_steps = math.ceil(len(train_data) * num_epochs / batch_size * 0.1)  # 10% of train data for warm-up
-logging.info("Warmup-steps: {}".format(warmup_steps))
+    args = parser.parse_args()
+    # Read the dataset
+    batch_size = args.batch_size
+    agb_reader = AGBDataReader(args.dataset_folder)
+    # Read the dataset
+    model_name = 'roberta-base'
+    train_num_labels = agb_reader.get_num_labels()
+    model_save_path = os.path.join(args.output_folder,'training_agb_'+model_name+'-'+datetime.now().strftime("%Y-%m-%d_%H-%M-%S"))
 
 
-# Train the model
-model.fit(train_objectives=[(train_dataloader, train_loss)],
-          evaluator=evaluator,
-          epochs=num_epochs,
-          evaluation_steps=30000,
-          warmup_steps=warmup_steps,
-          output_path=model_save_path
-          )
-os.mkdir(os.path.join(model_save_path,"2_Softmax"))
-torch.save(train_loss.classifier,os.path.join(model_save_path,"2_Softmax/pytorch_model.bin"))
+    # Use RoBERTa for mapping tokens to embeddings
+    word_embedding_model = models.RoBERTa(model_name)
 
-##############################################################################
-#
-# Load the stored model and evaluate its performance on STS benchmark dataset
-#
-##############################################################################
+    # Apply mean pooling to get one fixed sized sentence vector
+    pooling_model = models.Pooling(word_embedding_model.get_word_embedding_dimension(),
+                                   pooling_mode_mean_tokens=True,
+                                   pooling_mode_cls_token=False,
+                                   pooling_mode_max_tokens=False)
 
-model = SentenceTransformer(model_save_path)
-test_data = SentencesDataset(examples=agb_reader.get_examples('dev_raw.tsv'), model=model, shorten=True)
-test_dataloader = DataLoader(test_data, shuffle=False, batch_size=batch_size)
-train_loss.classifier=torch.load(os.path.join(model_save_path,"2_Softmax/pytorch_model.bin"))
-evaluator = LabelAccuracyEvaluator(test_dataloader, softmax_model=train_loss)
-model.evaluate(evaluator)
+    model = SentenceTransformer(modules=[word_embedding_model, pooling_model])
+
+
+    # Convert the dataset to a DataLoader ready for training
+    logging.info("Read AGB train dataset")
+    train_data = SentencesDataset(agb_reader.get_examples('train_raw.tsv'), model=model, shorten=True)
+    train_dataloader = DataLoader(train_data, shuffle=True, batch_size=batch_size)
+    train_loss = losses.SoftmaxLoss(model=model,
+                                    sentence_embedding_dimension=model.get_sentence_embedding_dimension(),
+                                    num_labels=train_num_labels)
+
+    logging.info("Read AGB dev dataset")
+    dev_data = SentencesDataset(examples=agb_reader.get_examples('dev_raw.tsv'), model=model, shorten=True)
+    dev_dataloader = DataLoader(dev_data, shuffle=False, batch_size=batch_size)
+    evaluator = LabelAccuracyEvaluator(dev_dataloader, softmax_model=train_loss)
+
+    # Configure the training
+    num_epochs = args.num_epochs
+
+    warmup_steps = math.ceil(len(train_data) * num_epochs / batch_size * 0.1)  # 10% of train data for warm-up
+    logging.info("Warmup-steps: {}".format(warmup_steps))
+
+
+    # Train the model
+    model.fit(train_objectives=[(train_dataloader, train_loss)],
+              evaluator=evaluator,
+              epochs=num_epochs,
+              evaluation_steps=args.intermediate_eval_steps,
+              warmup_steps=warmup_steps,
+              output_path=model_save_path
+              )
+    os.mkdir(os.path.join(model_save_path,"2_Softmax"))
+    torch.save(train_loss.classifier,os.path.join(model_save_path,"2_Softmax/pytorch_model.bin"))
+
+    ##############################################################################
+    #
+    # Load the stored model and evaluate its performance on STS benchmark dataset
+    #
+    ##############################################################################
+
+    model = SentenceTransformer(model_save_path)
+    test_data = SentencesDataset(examples=agb_reader.get_examples('dev_raw.tsv'), model=model, shorten=True)
+    test_dataloader = DataLoader(test_data, shuffle=False, batch_size=batch_size)
+    train_loss.classifier=torch.load(os.path.join(model_save_path,"2_Softmax/pytorch_model.bin"))
+    evaluator = LabelAccuracyEvaluator(test_dataloader, softmax_model=train_loss)
+    model.evaluate(evaluator)
