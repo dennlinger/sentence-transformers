@@ -3,6 +3,7 @@ Generates three numpy pickled files that contain the data from our og-paragraph 
 """
 
 from sentence_transformers import SentenceTransformer
+from tqdm import tqdm
 import numpy as np
 import pickle
 import json
@@ -11,7 +12,7 @@ import os
 
 def write_tensors_to_pickle(files, out_fn="train.pkl"):
     all_tensors = []
-    for fn in files:
+    for fn in tqdm(files):
         fpath = os.path.join("/data/daumiller/tos-section-analyzer/tos-data-og", fn)
         with open(fpath) as f:
             tos = json.load(f)
